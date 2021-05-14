@@ -152,6 +152,7 @@ public class TradeBuildDB {
                         symbol = TradeConfig.rndSymbol();
                         quantity = TradeConfig.rndQuantity();
                         tradeDirect.buy(userID, symbol, quantity, TradeConfig.orderProcessingMode);
+                        tradeDirect.updateQuotePriceVolume(symbol, TradeConfig.getRandomPriceChangeFactor("buy"), quantity);
                     } // end-for
                     if (i % 50 == 0) {
                         out.println(" has " + holdings + " holdings.");
