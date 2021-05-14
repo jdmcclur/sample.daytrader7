@@ -369,10 +369,10 @@ public class TradeConfig {
 
     private static final BigDecimal ONE = new BigDecimal(1.0);
 	
-    public static BigDecimal getRandomPriceChangeFactor() {
+    public static BigDecimal getRandomPriceChangeFactor(String orderType) {
         // CJB (DAYTRADER-25) - Vary change factor between 1.1 and 0.9
         double percentGain = rndFloat(1) * 0.1;
-        if (random() < .5) {
+        if (orderType.equals("sell")) {
             percentGain *= -1;
         }
         percentGain += 1;

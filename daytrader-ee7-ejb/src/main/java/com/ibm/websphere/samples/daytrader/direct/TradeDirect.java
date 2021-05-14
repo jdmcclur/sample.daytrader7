@@ -1321,19 +1321,28 @@ public class TradeDirect implements TradeServices {
             quoteData = getQuoteForUpdate(conn, symbol);
             BigDecimal oldPrice = quoteData.getPrice();
             BigDecimal openPrice = quoteData.getOpen();
-
-            double newVolume = quoteData.getVolume() + sharesTraded;
-
-            if (oldPrice.equals(TradeConfig.PENNY_STOCK_PRICE)) {
-                changeFactor = TradeConfig.PENNY_STOCK_RECOVERY_MIRACLE_MULTIPLIER;
-            } else if (oldPrice.compareTo(TradeConfig.MAXIMUM_STOCK_PRICE) > 0) {
-                changeFactor = TradeConfig.MAXIMUM_STOCK_SPLIT_MULTIPLIER;
-            }
+            BigDecimal low = quoteData.getLow();
+            BigDecimal high = quoteData.getHigh();
+            
+            double newVolume = quoteData.getVolume() + sharesTraded;  
 
             BigDecimal newPrice = changeFactor.multiply(oldPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
+            
+            if (newPrice.compareTo(TradeConfig.PENNY_STOCK_PRICE) < 0) {
+              newPrice = TradeConfig.PENNY_STOCK_PRICE;
+            } else if (newPrice.compareTo(TradeConfig.MAXIMUM_STOCK_PRICE) > 0) {
+              newPrice = TradeConfig.MAXIMUM_STOCK_PRICE;
+            }
+            
             double change = newPrice.subtract(openPrice).doubleValue();
 
-            updateQuotePriceVolume(conn, quoteData.getSymbol(), newPrice, newVolume, change);
+            if (newPrice.compareTo(low) == -1) {
+              low = newPrice;
+            } else if (newPrice.compareTo(high) == 1) {
+              high = newPrice;
+            }
+
+            updateQuotePriceVolume(conn, quoteData.getSymbol(), newPrice, newVolume, change, low, high);
             quoteData = getQuote(conn, symbol);
 
             commit(conn);
@@ -1352,15 +1361,17 @@ public class TradeDirect implements TradeServices {
         return quoteData;
     }
 
-    private void updateQuotePriceVolume(Connection conn, String symbol, BigDecimal newPrice, double newVolume, double change) throws Exception {
+    private void updateQuotePriceVolume(Connection conn, String symbol, BigDecimal newPrice, double newVolume, double change, BigDecimal low, BigDecimal high) throws Exception {
 
         PreparedStatement stmt = getStatement(conn, updateQuotePriceVolumeSQL);
 
         stmt.setBigDecimal(1, newPrice);
         stmt.setDouble(2, change);
         stmt.setDouble(3, newVolume);
-        stmt.setString(4, symbol);
-
+        stmt.setBigDecimal(4, low);
+        stmt.setBigDecimal(5, high);
+        stmt.setString(6, symbol);
+        
         stmt.executeUpdate();
         stmt.close();
     }
@@ -2011,7 +2022,7 @@ public class TradeDirect implements TradeServices {
 
     private static final String updateOrderHoldingSQL = "update orderejb set " + "holding_holdingID = ? " + "where orderid = ?";
 
-    private static final String updateQuotePriceVolumeSQL = "update quoteejb set " + "price = ?, change1 = ?, volume = ? " + "where symbol = ?";
+    private static final String updateQuotePriceVolumeSQL = "update quoteejb set " + "price = ?, change1 = ?, volume = ?, low = ?, high = ?" + "where symbol = ?";
 
     private static boolean initialized = false;
 

@@ -449,18 +449,25 @@ public class TradeSLSBBean implements TradeSLSBRemote, TradeSLSBLocal {
 
         BigDecimal oldPrice = quote.getPrice();
         BigDecimal openPrice = quote.getOpen();
-
-        if (oldPrice.equals(TradeConfig.PENNY_STOCK_PRICE)) {
-            changeFactor = TradeConfig.PENNY_STOCK_RECOVERY_MIRACLE_MULTIPLIER;
-        } else if (oldPrice.compareTo(TradeConfig.MAXIMUM_STOCK_PRICE) > 0) {
-            changeFactor = TradeConfig.MAXIMUM_STOCK_SPLIT_MULTIPLIER;
-        }
-
+        
         BigDecimal newPrice = changeFactor.multiply(oldPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
+
+        if (newPrice.compareTo(TradeConfig.PENNY_STOCK_PRICE) < 0) {
+          newPrice = TradeConfig.PENNY_STOCK_PRICE;
+        } else if (newPrice.compareTo(TradeConfig.MAXIMUM_STOCK_PRICE) > 0) {
+          newPrice = TradeConfig.MAXIMUM_STOCK_PRICE;
+        }
 
         quote.setPrice(newPrice);
         quote.setChange(newPrice.subtract(openPrice).doubleValue());
         quote.setVolume(quote.getVolume() + sharesTraded);
+
+        if (newPrice.compareTo(quote.getLow()) == -1) {
+          quote.setLow(newPrice);
+        } else if (newPrice.compareTo(quote.getHigh()) == 1) {
+          quote.setHigh(newPrice);
+        }
+
         entityManager.merge(quote);
 
         context.getBusinessObject(TradeSLSBLocal.class).publishQuotePriceChange(quote, oldPrice, changeFactor, sharesTraded);
