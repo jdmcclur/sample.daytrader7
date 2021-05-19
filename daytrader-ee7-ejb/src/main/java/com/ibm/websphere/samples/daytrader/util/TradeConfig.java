@@ -15,6 +15,10 @@
  */
 package com.ibm.websphere.samples.daytrader.util;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Random;
@@ -27,6 +31,34 @@ import java.util.Random;
  */
 
 public class TradeConfig {
+
+    private static ArrayList<BigDecimal> priceChangeList = new ArrayList<BigDecimal>();
+    private static int index = 0;
+    private static int priceChangeListSize;
+   
+    static {
+      // Read in stock prices
+      InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/yahoo_stocks_dataset.txt");
+      BufferedReader br = new BufferedReader(new InputStreamReader(is));
+      String line;
+      BigDecimal prev = null;
+      BigDecimal current = null;
+
+      try {
+        while((line = br.readLine()) != null) {
+          current = new BigDecimal(line).setScale(2, BigDecimal.ROUND_HALF_UP);
+          if (prev != null) {
+            priceChangeList.add(current.subtract(prev));
+          }
+          prev=current;
+        }
+        priceChangeListSize = priceChangeList.size();
+        System.out.println(priceChangeList.size());
+        br.close();
+      } catch (IOException ioe) {
+        ioe.printStackTrace();
+      } 
+    }
 
     /* Trade Runtime Configuration Parameters */
 
@@ -367,23 +399,18 @@ public class TradeConfig {
         return ((new Integer(rndInt(200))).floatValue()) + 1.0f;
     }
 
-    private static final BigDecimal ONE = new BigDecimal(1.0);
+    //private static final BigDecimal ONE = new BigDecimal(1.0);
 	
-    public static BigDecimal getRandomPriceChangeFactor() {
-        // CJB (DAYTRADER-25) - Vary change factor between 1.1 and 0.9
-        double percentGain = rndFloat(1) * 0.1;
-        if (random() < .5) {
-            percentGain *= -1;
-        }
-        percentGain += 1;
+    public static synchronized BigDecimal getNextPriceChange() {
+      BigDecimal priceChange = priceChangeList.get(index);
 
-        // change factor is between +/- 20%
-        BigDecimal percentGainBD = (new BigDecimal(percentGain)).setScale(2, BigDecimal.ROUND_HALF_UP);
-        if (percentGainBD.doubleValue() <= 0.0) {
-            percentGainBD = ONE;
-        }
-
-        return percentGainBD;
+      if (index == priceChangeListSize -1) {
+        index=0;
+      } else {
+        index+=1;
+      }
+      
+      return priceChange;
     }
 
     public static float rndQuantity() {

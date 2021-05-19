@@ -258,7 +258,7 @@ public class TradeAction implements TradeServices {
         // after the purchase or sell of a stock, update the stocks volume and
         // price
 
-        updateQuotePriceVolume(symbol, TradeConfig.getRandomPriceChangeFactor(), quantity);
+        updateQuotePriceVolume(symbol, TradeConfig.getNextPriceChange(), quantity);
 
         return orderData;
     }
@@ -300,7 +300,7 @@ public class TradeAction implements TradeServices {
        
 
         if (!orderData.getOrderStatus().equalsIgnoreCase("cancelled")) {
-            updateQuotePriceVolume(orderData.getSymbol(), TradeConfig.getRandomPriceChangeFactor(), orderData.getQuantity());
+            updateQuotePriceVolume(orderData.getSymbol(), TradeConfig.getNextPriceChange(), orderData.getQuantity());
         }
 
         return orderData;

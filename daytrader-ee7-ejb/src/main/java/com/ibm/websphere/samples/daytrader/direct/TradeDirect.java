@@ -1284,8 +1284,8 @@ public class TradeDirect implements TradeServices {
      */
 
     @Override
-    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal changeFactor, double sharesTraded) throws Exception {
-        return updateQuotePriceVolumeInt(symbol, changeFactor, sharesTraded, TradeConfig.getPublishQuotePriceChange());
+    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal priceChange, double sharesTraded) throws Exception {
+        return updateQuotePriceVolumeInt(symbol, priceChange, sharesTraded, TradeConfig.getPublishQuotePriceChange());
     }
 
     /**
@@ -1301,7 +1301,7 @@ public class TradeDirect implements TradeServices {
      *            used by the PingJDBCWrite Primitive to ensure no JMS is used,
      *            should be true for all normal calls to this API
      */
-    public QuoteDataBean updateQuotePriceVolumeInt(String symbol, BigDecimal changeFactor, double sharesTraded, boolean publishQuotePriceChange)
+    public QuoteDataBean updateQuotePriceVolumeInt(String symbol, BigDecimal priceChange, double sharesTraded, boolean publishQuotePriceChange)
             throws Exception {
 
         if (TradeConfig.getUpdateQuotePrices() == false) {
@@ -1313,7 +1313,7 @@ public class TradeDirect implements TradeServices {
 
         try {
             if (Log.doTrace()) {
-                Log.trace("TradeDirect:updateQuotePriceVolume - inSession(" + this.inSession + ")", symbol, changeFactor, new Double(sharesTraded));
+                Log.trace("TradeDirect:updateQuotePriceVolume - inSession(" + this.inSession + ")", symbol, priceChange, new Double(sharesTraded));
             }
 
             conn = getConn();
@@ -1324,13 +1324,7 @@ public class TradeDirect implements TradeServices {
 
             double newVolume = quoteData.getVolume() + sharesTraded;
 
-            if (oldPrice.equals(TradeConfig.PENNY_STOCK_PRICE)) {
-                changeFactor = TradeConfig.PENNY_STOCK_RECOVERY_MIRACLE_MULTIPLIER;
-            } else if (oldPrice.compareTo(TradeConfig.MAXIMUM_STOCK_PRICE) > 0) {
-                changeFactor = TradeConfig.MAXIMUM_STOCK_SPLIT_MULTIPLIER;
-            }
-
-            BigDecimal newPrice = changeFactor.multiply(oldPrice).setScale(2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal newPrice = oldPrice.add(priceChange);
             double change = newPrice.subtract(openPrice).doubleValue();
 
             updateQuotePriceVolume(conn, quoteData.getSymbol(), newPrice, newVolume, change);
@@ -1339,7 +1333,7 @@ public class TradeDirect implements TradeServices {
             commit(conn);
 
             if (publishQuotePriceChange) {
-                publishQuotePriceChange(quoteData, oldPrice, changeFactor, sharesTraded);
+                publishQuotePriceChange(quoteData, oldPrice, priceChange, sharesTraded);
             }
 
         } catch (Exception e) {
