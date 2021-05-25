@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -32,28 +34,28 @@ import java.util.Random;
 
 public class TradeConfig {
 
-    private static ArrayList<BigDecimal> priceChangeList = new ArrayList<BigDecimal>();
-    private static int index = 0;
-    private static int priceChangeListSize;
-   
-    static {
+    private static ArrayList<BigDecimal> priceList = new ArrayList<BigDecimal>();
+    private static int SECONDS_IN_DAY = 86400;
+
+       
+    static {    
       // Read in stock prices
       InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/yahoo_stocks_dataset.txt");
       BufferedReader br = new BufferedReader(new InputStreamReader(is));
       String line;
-      BigDecimal prev = null;
-      BigDecimal current = null;
-
+      
+      int i = 0;
       try {
         while((line = br.readLine()) != null) {
-          current = new BigDecimal(line).setScale(2, BigDecimal.ROUND_HALF_UP);
-          if (prev != null) {
-            priceChangeList.add(current.subtract(prev));
+          BigDecimal current = new BigDecimal(line).setScale(2, BigDecimal.ROUND_HALF_UP);
+          priceList.add(current);
+
+          i=i+1;
+          if (i == SECONDS_IN_DAY) {
+            break;
           }
-          prev=current;
         }
-        priceChangeListSize = priceChangeList.size();
-        System.out.println(priceChangeList.size());
+      
         br.close();
       } catch (IOException ioe) {
         ioe.printStackTrace();
@@ -401,16 +403,13 @@ public class TradeConfig {
 
     //private static final BigDecimal ONE = new BigDecimal(1.0);
 	
-    public static synchronized BigDecimal getNextPriceChange() {
-      BigDecimal priceChange = priceChangeList.get(index);
+    public static synchronized BigDecimal getPrice() {
 
-      if (index == priceChangeListSize -1) {
-        index=0;
-      } else {
-        index+=1;
-      }
-      
-      return priceChange;
+      LocalTime now = LocalTime.now(ZoneId.systemDefault()); 
+      int secondOfDay = now.toSecondOfDay();
+      BigDecimal price= priceList.get(secondOfDay);
+    
+      return price;
     }
 
     public static float rndQuantity() {

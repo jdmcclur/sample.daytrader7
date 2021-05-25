@@ -258,7 +258,7 @@ public class TradeAction implements TradeServices {
         // after the purchase or sell of a stock, update the stocks volume and
         // price
 
-        updateQuotePriceVolume(symbol, TradeConfig.getNextPriceChange(), quantity);
+        updateQuotePriceVolume(symbol, TradeConfig.getPrice(), quantity);
 
         return orderData;
     }
@@ -300,7 +300,7 @@ public class TradeAction implements TradeServices {
        
 
         if (!orderData.getOrderStatus().equalsIgnoreCase("cancelled")) {
-            updateQuotePriceVolume(orderData.getSymbol(), TradeConfig.getNextPriceChange(), orderData.getQuantity());
+            updateQuotePriceVolume(orderData.getSymbol(), TradeConfig.getPrice(), orderData.getQuantity());
         }
 
         return orderData;
@@ -476,13 +476,13 @@ public class TradeAction implements TradeServices {
      */
     /* avoid data collision with synch */
     @Override
-    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal changeFactor, double sharesTraded) throws Exception {
+    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal newPrice, double sharesTraded) throws Exception {
         if (Log.doActionTrace()) {
-            Log.trace("TradeAction:updateQuotePriceVolume", symbol, changeFactor, new Double(sharesTraded));
+            Log.trace("TradeAction:updateQuotePriceVolume", symbol, newPrice, new Double(sharesTraded));
         }
         QuoteDataBean quoteData = null;
         try {
-        	quoteData = trade.updateQuotePriceVolume(symbol, changeFactor, sharesTraded);
+        	quoteData = trade.updateQuotePriceVolume(symbol, newPrice, sharesTraded);
         } catch (Exception e) {
             Log.error("TradeAction:updateQuotePrice -- ", e);
         }

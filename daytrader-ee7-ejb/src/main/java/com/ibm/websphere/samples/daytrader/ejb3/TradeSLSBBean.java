@@ -434,13 +434,13 @@ public class TradeSLSBBean implements TradeSLSBRemote, TradeSLSBLocal {
     }
 
     @Override
-    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal priceChange, double sharesTraded) {
+    public QuoteDataBean updateQuotePriceVolume(String symbol, BigDecimal newPrice, double sharesTraded) {
         if (!TradeConfig.getUpdateQuotePrices()) {
             return new QuoteDataBean();
         }
 
         if (Log.doTrace()) {
-            Log.trace("TradeSLSBBean:updateQuote", symbol, priceChange);
+            Log.trace("TradeSLSBBean:updateQuote", symbol, newPrice);
         }
 
         TypedQuery<QuoteDataBean> q = entityManager.createNamedQuery("quoteejb.quoteForUpdate",QuoteDataBean.class);
@@ -449,14 +449,14 @@ public class TradeSLSBBean implements TradeSLSBRemote, TradeSLSBLocal {
 
         BigDecimal oldPrice = quote.getPrice();
         BigDecimal openPrice = quote.getOpen();      
-        BigDecimal newPrice = (oldPrice).add(priceChange);
+     
 
         quote.setPrice(newPrice);
         quote.setChange(newPrice.subtract(openPrice).doubleValue());
         quote.setVolume(quote.getVolume() + sharesTraded);
         entityManager.merge(quote);
 
-        context.getBusinessObject(TradeSLSBLocal.class).publishQuotePriceChange(quote, oldPrice, priceChange, sharesTraded);
+        context.getBusinessObject(TradeSLSBLocal.class).publishQuotePriceChange(quote, oldPrice, newPrice.subtract(openPrice), sharesTraded);
        
         return quote;
     }

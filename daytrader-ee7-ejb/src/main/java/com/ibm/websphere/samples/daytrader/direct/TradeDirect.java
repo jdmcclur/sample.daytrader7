@@ -1301,7 +1301,7 @@ public class TradeDirect implements TradeServices {
      *            used by the PingJDBCWrite Primitive to ensure no JMS is used,
      *            should be true for all normal calls to this API
      */
-    public QuoteDataBean updateQuotePriceVolumeInt(String symbol, BigDecimal priceChange, double sharesTraded, boolean publishQuotePriceChange)
+    public QuoteDataBean updateQuotePriceVolumeInt(String symbol, BigDecimal newPrice, double sharesTraded, boolean publishQuotePriceChange)
             throws Exception {
 
         if (TradeConfig.getUpdateQuotePrices() == false) {
@@ -1313,7 +1313,7 @@ public class TradeDirect implements TradeServices {
 
         try {
             if (Log.doTrace()) {
-                Log.trace("TradeDirect:updateQuotePriceVolume - inSession(" + this.inSession + ")", symbol, priceChange, new Double(sharesTraded));
+                Log.trace("TradeDirect:updateQuotePriceVolume - inSession(" + this.inSession + ")", symbol, newPrice, new Double(sharesTraded));
             }
 
             conn = getConn();
@@ -1324,7 +1324,7 @@ public class TradeDirect implements TradeServices {
 
             double newVolume = quoteData.getVolume() + sharesTraded;
 
-            BigDecimal newPrice = oldPrice.add(priceChange);
+           
             double change = newPrice.subtract(openPrice).doubleValue();
 
             updateQuotePriceVolume(conn, quoteData.getSymbol(), newPrice, newVolume, change);
@@ -1333,7 +1333,7 @@ public class TradeDirect implements TradeServices {
             commit(conn);
 
             if (publishQuotePriceChange) {
-                publishQuotePriceChange(quoteData, oldPrice, priceChange, sharesTraded);
+                publishQuotePriceChange(quoteData, oldPrice, newPrice.subtract(openPrice), sharesTraded);
             }
 
         } catch (Exception e) {

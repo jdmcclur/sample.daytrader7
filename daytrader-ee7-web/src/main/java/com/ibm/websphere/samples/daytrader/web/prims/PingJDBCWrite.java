@@ -68,7 +68,7 @@ public class PingJDBCWrite extends HttpServlet {
         try {
             // get a random symbol to update and a random price.
             symbol = TradeConfig.rndSymbol();
-            newPrice = TradeConfig.getNextPriceChange();
+            newPrice = TradeConfig.getPrice();
 
             // TradeJDBC makes use of prepared statements so I am going to reuse
             // the existing code.
