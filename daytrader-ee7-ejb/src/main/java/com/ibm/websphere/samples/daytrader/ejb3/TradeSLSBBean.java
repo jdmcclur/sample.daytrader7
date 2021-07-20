@@ -649,8 +649,13 @@ public class TradeSLSBBean implements TradeSLSBRemote, TradeSLSBLocal {
                     + ((quote == null) ? null : quote.getSymbol()) + " orderType=" + orderType + " quantity=" + quantity);
         }
         try {
-            order = new OrderDataBean(orderType, "open", new Timestamp(System.currentTimeMillis()), null, quantity, quote.getPrice().setScale(
-                    FinancialUtils.SCALE, FinancialUtils.ROUND), TradeConfig.getOrderFee(orderType), account, quote, holding);
+            //order = new OrderDataBean(orderType, "open", new Timestamp(System.currentTimeMillis()), null, quantity, quote.getPrice().setScale(
+            //        FinancialUtils.SCALE, FinancialUtils.ROUND), TradeConfig.getOrderFee(orderType), account, quote, holding);
+
+            // Create Order with current price:           
+            order = new OrderDataBean(orderType, "open", new Timestamp(System.currentTimeMillis()), null, quantity, TradeConfig.getPrice(), 
+              TradeConfig.getOrderFee(orderType), account, quote, holding);
+
             entityManager.persist(order);
         } catch (Exception e) {
             Log.error("TradeSLSBBean:createOrder -- failed to create Order. The stock/quote may not exist in the database.", e);

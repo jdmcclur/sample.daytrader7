@@ -632,7 +632,9 @@ public class TradeDirect implements TradeServices {
         stmt.setString(3, "open");
         stmt.setTimestamp(4, currentDate);
         stmt.setDouble(5, quantity);
-        stmt.setBigDecimal(6, quoteData.getPrice().setScale(FinancialUtils.SCALE, FinancialUtils.ROUND));
+        //stmt.setBigDecimal(6, quoteData.getPrice().setScale(FinancialUtils.SCALE, FinancialUtils.ROUND));
+        // set current price
+        stmt.setBigDecimal(6, TradeConfig.getPrice());
         stmt.setBigDecimal(7, TradeConfig.getOrderFee(orderType));
         stmt.setInt(8, accountData.getAccountID().intValue());
         if (holdingData == null) {

@@ -403,7 +403,7 @@ public class TradeConfig {
 
     //private static final BigDecimal ONE = new BigDecimal(1.0);
 	
-    public static synchronized BigDecimal getPrice() {
+    public static BigDecimal getPrice() {
 
       LocalTime now = LocalTime.now(ZoneId.systemDefault()); 
       int secondOfDay = now.toSecondOfDay();
