@@ -1908,8 +1908,15 @@ public class TradeDirect implements TradeServices {
     private void commit(Connection conn) throws Exception {
         if (!inSession) {
             if ((getInGlobalTxn() == false) && (conn != null)) {
-                conn.commit();
-            }
+                try {
+                    conn.commit();
+                } catch (SQLException sqle) {
+                    if (sqle.getErrorCode() == -4498) {
+                      //try again
+                      conn.commit();
+                  }
+               }
+           }
         }
     }
 
